@@ -11,11 +11,29 @@ from aqt import mw
 from aqt.qt import *
 from aqt import editor
 from anki import notes
+from anki import stdmodels
 
 # Support the same media types as the Editor
 AUDIO = editor.audio
 IMAGE = editor.pics
 
+def getMediaModel():
+    """Return a note type (model) suitable for this add-on.
+    
+    The note type is called 'Basic' and contains two fields:
+    Front and Back. The note type will be created if it doesn't
+    already exist."""
+    
+    m = mw.col.models
+    model = m.byName('Basic')
+    if (model and len(model['flds']) == 2
+        and 'Front' in m.fieldNames(model)
+        and 'Back' in m.fieldNames(model)):
+        return model
+    else:
+        model = stdmodels.addBasicModel(mw.col)
+        m.save(model)
+        return model
 
 def doMediaImport():
     dir = str(QFileDialog.getExistingDirectory(mw, "Import Directory"))
@@ -23,7 +41,8 @@ def doMediaImport():
         return
     # Get the MediaImport deck id (auto-created if it doesn't exist)
     did = mw.col.decks.id('MediaImport')
-    model = mw.col.models.byName('Basic')
+    # Get the note type to use for the new notes
+    model = getMediaModel()
     files = [f for f in listdir(dir) if isfile(join(dir, f))]
     mw.progress.start(max=len(files), parent=mw, immediate=True)
     newCount = 0
@@ -64,7 +83,6 @@ Please refer to the introductory videos for instructions on
 <a href="https://youtube.com/watch?v=DnbKwHEQ1mA">flipping card content</a> or 
 <a href="http://youtube.com/watch?v=F1j1Zx0mXME">modifying the appearance of cards.</a>
 </p>""" % newCount)
-
 
 
 action = QAction("Media Import...", mw)
