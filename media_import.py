@@ -1,8 +1,13 @@
 # -*- coding: utf-8 -*-
+# Version: 1.1
+#
 # This is an Anki add-on for creating notes/cards by importing media
 # files from a user-selected directory. The file name (without the
 # extension) will be used as the expression, and the media file itself
 # will be used as the answer part.
+#
+# See github page to report issues or to contribute:
+# https://github.com/hssm/media-import
 
 from os import listdir
 from os.path import isfile, join
@@ -53,8 +58,8 @@ def doMediaImport():
         # Skip files with no extension
         if not ext:
             continue
-        note['Front'] = unicode(exp)
-        path = unicode(os.path.join(dir, file))
+        note['Front'] = unicode(exp, 'utf_8')
+        path = unicode(os.path.join(dir, file), 'utf_8')
         ext = ext[1:].lower()
         if ext in AUDIO:
             fname = mw.col.media.addFile(path)
