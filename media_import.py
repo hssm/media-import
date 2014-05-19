@@ -9,6 +9,7 @@
 # See github page to report issues or to contribute:
 # https://github.com/hssm/media-import
 
+import os
 from os import listdir
 from os.path import isfile, join
 
@@ -40,6 +41,7 @@ def getMediaModel():
         m.save(model)
         return model
 
+
 def doMediaImport():
     dir = str(QFileDialog.getExistingDirectory(mw, "Import Directory"))
     if not dir:
@@ -48,7 +50,9 @@ def doMediaImport():
     did = mw.col.decks.id('MediaImport')
     # Get the note type to use for the new notes
     model = getMediaModel()
-    files = [f for f in listdir(dir) if isfile(join(dir, f))]
+    # Passing in a unicode path to os.walk gives us unicode results.
+    # We won't walk the path - we only want the top-level files.
+    (root, dirs, files) = os.walk(unicode(dir)).next()
     mw.progress.start(max=len(files), parent=mw, immediate=True)
     newCount = 0
     for i, file in enumerate(files):
@@ -58,8 +62,8 @@ def doMediaImport():
         # Skip files with no extension
         if not ext:
             continue
-        note['Front'] = unicode(exp, 'utf_8')
-        path = unicode(os.path.join(dir, file), 'utf_8')
+        note['Front'] = exp
+        path = os.path.join(root, file)
         ext = ext[1:].lower()
         if ext in AUDIO:
             fname = mw.col.media.addFile(path)
@@ -76,6 +80,7 @@ def doMediaImport():
     mw.progress.finish()
     mw.deckBrowser.refresh()
     showCompletionDialog(newCount)
+
 
 def showCompletionDialog(newCount):
     QMessageBox.about(mw, "Media Import Complete",
