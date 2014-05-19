@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Version: 1.1
+# Version: 1.2
 #
 # This is an Anki add-on for creating notes/cards by importing media
 # files from a user-selected directory. The file name (without the
