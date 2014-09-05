@@ -55,32 +55,39 @@ def doMediaImport():
     (root, dirs, files) = os.walk(unicode(dir)).next()
     mw.progress.start(max=len(files), parent=mw, immediate=True)
     newCount = 0
+    failure = False
     for i, file in enumerate(files):
         note = notes.Note(mw.col, model)
         note.model()['did'] = did
         exp, ext = os.path.splitext(file)
-        # Skip files with no extension
-        if not ext:
-            continue
-        note['Front'] = exp
-        path = os.path.join(root, file)
         ext = ext[1:].lower()
-        if ext in AUDIO:
+        path = os.path.join(root, file)
+        if not ext:
+            # Skip files with no extension
+            continue
+        elif ext in AUDIO:
             fname = mw.col.media.addFile(path)
             note['Back'] = u'[sound:%s]' % fname
-            newCount += 1
         elif ext in IMAGE:
             fname = mw.col.media.addFile(path)
             note['Back'] = u'<img src="%s">' % fname
-            newCount += 1
         else:
+            # Skip non-media files
             continue
+        note['Front'] = exp
+        if not mw.col.addNote(note):
+            # No cards were generated - probably bad template. No point
+            # trying to import anymore.
+            failure = True
+            break
+        newCount += 1
         mw.progress.update(value=i)
-        mw.col.addNote(note)
     mw.progress.finish()
     mw.deckBrowser.refresh()
-    showCompletionDialog(newCount)
-
+    if failure:
+        showFailureDialog()
+    else:
+        showCompletionDialog(newCount)
 
 def showCompletionDialog(newCount):
     QMessageBox.about(mw, "Media Import Complete",
@@ -94,6 +101,15 @@ Please refer to the introductory videos for instructions on
 <a href="http://youtube.com/watch?v=F1j1Zx0mXME">modifying the appearance of cards.</a>
 </p>""" % newCount)
 
+def showFailureDialog():
+    QMessageBox.about(mw, "Media Import Failure",
+"""
+<p>
+Failed to generate cards and no media files were imported. Please ensure
+your <b>Basic</b> note type is able to generate cards by using a valid
+<a href="http://ankisrs.net/docs/manual.html#cards-and-templates">card template</a>.
+</p>
+""")
 
 action = QAction("Media Import...", mw)
 mw.connect(action, SIGNAL("triggered()"), doMediaImport)
