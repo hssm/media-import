@@ -21,7 +21,12 @@ import config_dialog
 AUDIO = editor.audio
 IMAGE = editor.pics
 # Possible field mappings
-ACTIONS = ['', 'Media', 'File Name', 'Extension']
+ACTIONS = ['',
+           'Media',
+           'File Name',
+           'File Name (full)',
+           'Extension',
+           'Sequence']
 
 def doMediaImport():
     # Prompt user for note type and field mappings
@@ -36,12 +41,12 @@ def doMediaImport():
     mw.progress.start(max=len(files), parent=mw, immediate=True)
     newCount = 0
     failure = False
-    for i, file in enumerate(files):
+    for i, fileName in enumerate(files):
         note = notes.Note(mw.col, model)
         note.model()['did'] = did
-        mediaName, ext = os.path.splitext(file)
+        mediaName, ext = os.path.splitext(fileName)
         ext = ext[1:].lower()
-        path = os.path.join(root, file)
+        path = os.path.join(root, fileName)
         if ext is None or ext not in AUDIO+IMAGE:
             # Skip files with no extension and non-media files
             continue
@@ -61,8 +66,12 @@ def doMediaImport():
                      note[field] =u'<img src="%s">' % fname
             elif action == "File Name":
                 note[field] = mediaName
+            elif action == "File Name (full)":
+                note[field] = fileName
             elif action == "Extension":
                 note[field] = ext
+            elif action == "Sequence":
+                note[field] = str(i)
 
         if not mw.col.addNote(note):
             # No cards were generated - probably bad template. No point
