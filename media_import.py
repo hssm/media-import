@@ -24,18 +24,15 @@ IMAGE = editor.pics
 ACTIONS = ['', 'Media', 'File Name', 'Extension']
 
 def doMediaImport():
-    dir = str(QFileDialog.getExistingDirectory(mw, "Import Directory"))
-    if not dir:
+    # Prompt user for note type and field mappings
+    (path, model, fieldMap, ok) = ImportSettingsDialog().getModelFieldMap()
+    if not ok:
         return
     # Get the MediaImport deck id (auto-created if it doesn't exist)
     did = mw.col.decks.id('MediaImport')
-    # Prompt user for note type and field mappings
-    (model, fieldMap, ok) = ImportSettingsDialog().getModelFieldMap()
-    if not ok:
-        return
     # Passing in a unicode path to os.walk gives us unicode results.
     # We won't walk the path - we only want the top-level files.
-    (root, dirs, files) = os.walk(unicode(dir)).next()
+    (root, dirs, files) = os.walk(unicode(path)).next()
     mw.progress.start(max=len(files), parent=mw, immediate=True)
     newCount = 0
     failure = False
@@ -89,7 +86,10 @@ class ImportSettingsDialog(QDialog):
         self.form.setupUi(self)
         self.form.buttonBox.accepted.connect(self.accept)
         self.form.buttonBox.rejected.connect(self.reject)
+        self.form.browse.clicked.connect(self.onBrowse)
         self.populateModelList()
+        self.mediaDir = None
+        self.fieldCount = 0
         self.exec_()
 
     def populateModelList(self):
@@ -135,7 +135,7 @@ class ImportSettingsDialog(QDialog):
         selections"""
 
         if self.result() == QDialog.Rejected:
-            return (None, None, False)
+            return (None, None, None, False)
 
         model = self.form.modelList.currentItem().model
         # Iterate the grid rows to populate the field map
@@ -148,7 +148,21 @@ class ImportSettingsDialog(QDialog):
             action = grid.itemAtPosition(row, 1).widget().currentIndex()
             fieldMap[field] = action
 
-        return (model, fieldMap, True)
+        return (self.mediaDir, model, fieldMap, True)
+
+    def onBrowse(self):
+        self.mediaDir = str(
+            QFileDialog.getExistingDirectory(mw, "Import Directory"))
+        if not self.mediaDir:
+            return
+        self.form.mediaDir.setText(self.mediaDir)
+        self.form.mediaDir.setStyleSheet("")
+
+    def accept(self):
+        if not self.mediaDir:
+            self.form.mediaDir.setStyleSheet("border: 1px solid red")
+            return
+        QDialog.accept(self)
 
     def clearLayout(self, layout):
         while layout.count():

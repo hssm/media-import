@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'config_dialog.ui'
 #
-# Created: Sun Jan 11 06:51:41 2015
+# Created: Sun Jan 11 23:34:12 2015
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -26,9 +26,24 @@ except AttributeError:
 class Ui_Form(object):
     def setupUi(self, Form):
         Form.setObjectName(_fromUtf8("Form"))
-        Form.resize(517, 279)
-        self.gridLayout_2 = QtGui.QGridLayout(Form)
-        self.gridLayout_2.setObjectName(_fromUtf8("gridLayout_2"))
+        Form.resize(604, 353)
+        self.verticalLayout = QtGui.QVBoxLayout(Form)
+        self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
+        self.horizontalLayout_2 = QtGui.QHBoxLayout()
+        self.horizontalLayout_2.setObjectName(_fromUtf8("horizontalLayout_2"))
+        self.label_3 = QtGui.QLabel(Form)
+        self.label_3.setObjectName(_fromUtf8("label_3"))
+        self.horizontalLayout_2.addWidget(self.label_3)
+        self.mediaDir = QtGui.QLineEdit(Form)
+        self.mediaDir.setEnabled(False)
+        self.mediaDir.setObjectName(_fromUtf8("mediaDir"))
+        self.horizontalLayout_2.addWidget(self.mediaDir)
+        self.browse = QtGui.QPushButton(Form)
+        self.browse.setObjectName(_fromUtf8("browse"))
+        self.horizontalLayout_2.addWidget(self.browse)
+        self.verticalLayout.addLayout(self.horizontalLayout_2)
+        spacerItem = QtGui.QSpacerItem(0, 10, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed)
+        self.verticalLayout.addItem(spacerItem)
         self.gridLayout = QtGui.QGridLayout()
         self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
         self.modelList = QtGui.QListWidget(Form)
@@ -47,13 +62,15 @@ class Ui_Form(object):
         self.label = QtGui.QLabel(Form)
         self.label.setObjectName(_fromUtf8("label"))
         self.gridLayout.addWidget(self.label, 0, 0, 1, 1)
-        self.gridLayout_2.addLayout(self.gridLayout, 1, 0, 1, 1)
+        self.verticalLayout.addLayout(self.gridLayout)
 
         self.retranslateUi(Form)
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
         Form.setWindowTitle(_translate("Form", "Form", None))
+        self.label_3.setText(_translate("Form", "Media directory: ", None))
+        self.browse.setText(_translate("Form", "Browse", None))
         self.label_2.setText(_translate("Form", "Map fields", None))
         self.label.setText(_translate("Form", "Select note type", None))
 
