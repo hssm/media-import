@@ -1,46 +1,27 @@
 # -*- coding: utf-8 -*-
-# Version: 1.3
+# Version: 2.0alpha1
 #
-# This is an Anki add-on for creating notes/cards by importing media
-# files from a user-selected directory. The file name (without the
-# extension) will be used as the expression, and the media file itself
-# will be used as the answer part.
+# This is an Anki add-on for creating notes by importing media files from a
+# user-selected directory. The user is able to map properties of the imported
+# file to fields in a note type. For example, a user can map the media file
+# to the 'Front' field and the file name to the 'Back' field and generate new
+# cards from a folder of media files following this pattern.
 #
 # See github page to report issues or to contribute:
 # https://github.com/hssm/media-import
-
-import os
-from os import listdir
-from os.path import isfile, join
 
 from aqt import mw
 from aqt.qt import *
 from aqt import editor
 from anki import notes
-from anki import stdmodels
+
+import config_dialog
 
 # Support the same media types as the Editor
 AUDIO = editor.audio
 IMAGE = editor.pics
-
-def getMediaModel():
-    """Return a note type (model) suitable for this add-on.
-    
-    The note type is called 'Basic' and contains two fields:
-    Front and Back. The note type will be created if it doesn't
-    already exist."""
-    
-    m = mw.col.models
-    model = m.byName('Basic')
-    if (model and len(model['flds']) == 2
-        and 'Front' in m.fieldNames(model)
-        and 'Back' in m.fieldNames(model)):
-        return model
-    else:
-        model = stdmodels.addBasicModel(mw.col)
-        m.save(model)
-        return model
-
+# Possible field mappings
+ACTIONS = ['', 'Media', 'File Name', 'Extension']
 
 def doMediaImport():
     dir = str(QFileDialog.getExistingDirectory(mw, "Import Directory"))
@@ -48,8 +29,10 @@ def doMediaImport():
         return
     # Get the MediaImport deck id (auto-created if it doesn't exist)
     did = mw.col.decks.id('MediaImport')
-    # Get the note type to use for the new notes
-    model = getMediaModel()
+    # Prompt user for note type and field mappings
+    (model, fieldMap, ok) = ImportSettingsDialog().getModelFieldMap()
+    if not ok:
+        return
     # Passing in a unicode path to os.walk gives us unicode results.
     # We won't walk the path - we only want the top-level files.
     (root, dirs, files) = os.walk(unicode(dir)).next()
@@ -59,22 +42,31 @@ def doMediaImport():
     for i, file in enumerate(files):
         note = notes.Note(mw.col, model)
         note.model()['did'] = did
-        exp, ext = os.path.splitext(file)
+        mediaName, ext = os.path.splitext(file)
         ext = ext[1:].lower()
         path = os.path.join(root, file)
-        if not ext:
-            # Skip files with no extension
+        if ext is None or ext not in AUDIO+IMAGE:
+            # Skip files with no extension and non-media files
             continue
-        elif ext in AUDIO:
-            fname = mw.col.media.addFile(path)
-            note['Back'] = u'[sound:%s]' % fname
-        elif ext in IMAGE:
-            fname = mw.col.media.addFile(path)
-            note['Back'] = u'<img src="%s">' % fname
-        else:
-            # Skip non-media files
-            continue
-        note['Front'] = exp
+
+        # Add the file to the media collection and get its name
+        fname = mw.col.media.addFile(path)
+
+        # Now we populate each field according to the mapping selected
+        for field, idx in fieldMap.iteritems():
+            action = ACTIONS[idx]
+            if action == '':
+                continue
+            elif action == "Media":
+                if ext in AUDIO:
+                     note[field] = u'[sound:%s]' % fname
+                elif ext in IMAGE:
+                     note[field] =u'<img src="%s">' % fname
+            elif action == "File Name":
+                note[field] = mediaName
+            elif action == "Extension":
+                note[field] = ext
+
         if not mw.col.addNote(note):
             # No cards were generated - probably bad template. No point
             # trying to import anymore.
@@ -88,6 +80,84 @@ def doMediaImport():
         showFailureDialog()
     else:
         showCompletionDialog(newCount)
+
+
+class ImportSettingsDialog(QDialog):
+    def __init__(self):
+        QDialog.__init__(self, mw)
+        self.form = config_dialog.Ui_Form()
+        self.form.setupUi(self)
+        self.form.buttonBox.accepted.connect(self.accept)
+        self.form.buttonBox.rejected.connect(self.reject)
+        self.populateModelList()
+        self.exec_()
+
+    def populateModelList(self):
+        """Fill in the list of available note types to select from."""
+        models = mw.col.models.all()
+        for m in models:
+            item = QListWidgetItem(m['name'])
+            # Put the model in the widget to conveniently fetch later
+            item.model = m
+            self.form.modelList.addItem(item)
+        self.form.modelList.sortItems()
+        self.form.modelList.connect(self.form.modelList,
+                               SIGNAL("currentRowChanged(int)"),
+                               self.populateFieldGrid)
+        # Triggers a selection so the fields will be populated
+        self.form.modelList.setCurrentRow(0)
+
+    def populateFieldGrid(self):
+        """Fill in the fieldMapGrid QGridLayout.
+
+        Each row in the grid contains two columns:
+        Column 0 = QLabel with name of field
+        Column 1 = QComboBox with selection of mappings ("actions")
+        The first two fields will default to Media and File Name, so we have
+        special cases for rows 0 and 1. The final row is a spacer."""
+
+        self.clearLayout(self.form.fieldMapGrid)
+        for row, field in enumerate(self.form.modelList.currentItem().model['flds']):
+            cmb = QComboBox()
+            cmb.addItems(ACTIONS)
+            self.form.fieldMapGrid.addWidget(QLabel(field['name']), row, 0)
+            self.form.fieldMapGrid.addWidget(cmb, row, 1)
+            if row == 0: cmb.setCurrentIndex(1)
+            if row == 1: cmb.setCurrentIndex(2)
+        row += 1
+        self.fieldCount = row
+        self.form.fieldMapGrid.addItem(
+            QSpacerItem(0, 0, QSizePolicy.Minimum, QSizePolicy.Expanding),
+            row, 0)
+
+    def getModelFieldMap(self):
+        """Show the model/field selection dialog and return a tuple with the
+        selections"""
+
+        if self.result() == QDialog.Rejected:
+            return (None, None, False)
+
+        model = self.form.modelList.currentItem().model
+        # Iterate the grid rows to populate the field map
+        fieldMap = {}
+        grid = self.form.fieldMapGrid
+        for row in range(self.fieldCount):
+            # QLabel with field name
+            field = grid.itemAtPosition(row, 0).widget().text()
+            # QComboBox with index from the action list
+            action = grid.itemAtPosition(row, 1).widget().currentIndex()
+            fieldMap[field] = action
+
+        return (model, fieldMap, True)
+
+    def clearLayout(self, layout):
+        while layout.count():
+            child = layout.takeAt(0)
+            if child.widget() is not None:
+                child.widget().deleteLater()
+            elif child.layout() is not None:
+                self.clearLayout(child.layout())
+
 
 def showCompletionDialog(newCount):
     QMessageBox.about(mw, "Media Import Complete",
@@ -105,8 +175,8 @@ def showFailureDialog():
     QMessageBox.about(mw, "Media Import Failure",
 """
 <p>
-Failed to generate cards and no media files were imported. Please ensure
-your <b>Basic</b> note type is able to generate cards by using a valid
+Failed to generate cards and no media files were imported. Please ensure the
+note type you selected is able to generate cards by using a valid
 <a href="http://ankisrs.net/docs/manual.html#cards-and-templates">card template</a>.
 </p>
 """)
@@ -114,3 +184,4 @@ your <b>Basic</b> note type is able to generate cards by using a valid
 action = QAction("Media Import...", mw)
 mw.connect(action, SIGNAL("triggered()"), doMediaImport)
 mw.form.menuTools.addAction(action)
+
