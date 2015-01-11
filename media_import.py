@@ -29,8 +29,8 @@ ACTIONS = ['',
            'Sequence']
 
 def doMediaImport():
-    # Prompt user for note type and field mappings
-    (path, model, fieldMap, ok) = ImportSettingsDialog().getModelFieldMap()
+    # Raise the main dialog for the add-on and retrieve its result when closed.
+    (path, model, fieldMap, ok) = ImportSettingsDialog().getDialogResult()
     if not ok:
         return
     # Get the MediaImport deck id (auto-created if it doesn't exist)
@@ -50,10 +50,8 @@ def doMediaImport():
         if ext is None or ext not in AUDIO+IMAGE:
             # Skip files with no extension and non-media files
             continue
-
         # Add the file to the media collection and get its name
         fname = mw.col.media.addFile(path)
-
         # Now we populate each field according to the mapping selected
         for field, idx in fieldMap.iteritems():
             action = ACTIONS[idx]
@@ -97,7 +95,9 @@ class ImportSettingsDialog(QDialog):
         self.form.buttonBox.rejected.connect(self.reject)
         self.form.browse.clicked.connect(self.onBrowse)
         self.populateModelList()
+        # The path to the media directory chosen by user
         self.mediaDir = None
+        # The number of fields in the note type we are using
         self.fieldCount = 0
         self.exec_()
 
@@ -131,7 +131,7 @@ class ImportSettingsDialog(QDialog):
             cmb.addItems(ACTIONS)
             self.form.fieldMapGrid.addWidget(QLabel(field['name']), row, 0)
             self.form.fieldMapGrid.addWidget(cmb, row, 1)
-            if row == 0: cmb.setCurrentIndex(1)
+            if row == 0: cmb.setCurrentIndex(1) # TODO: don't hard-code index?
             if row == 1: cmb.setCurrentIndex(2)
         row += 1
         self.fieldCount = row
@@ -139,9 +139,14 @@ class ImportSettingsDialog(QDialog):
             QSpacerItem(0, 0, QSizePolicy.Minimum, QSizePolicy.Expanding),
             row, 0)
 
-    def getModelFieldMap(self):
-        """Show the model/field selection dialog and return a tuple with the
-        selections"""
+    def getDialogResult(self):
+        """Return a tuple containing the user-defined settings to follow
+        for an import. The tuple contains four items (in order):
+         - Path to chosen media directory
+         - The model (note type) to use for new notes
+         - A dictionary that maps each of the fields in the model to an
+           integer index from the ACTIONS list
+         - True/False indicating whether the user clicked OK/Cancel"""
 
         if self.result() == QDialog.Rejected:
             return (None, None, None, False)
@@ -160,6 +165,7 @@ class ImportSettingsDialog(QDialog):
         return (self.mediaDir, model, fieldMap, True)
 
     def onBrowse(self):
+        """Show the directory selection dialog."""
         self.mediaDir = str(
             QFileDialog.getExistingDirectory(mw, "Import Directory"))
         if not self.mediaDir:
@@ -168,12 +174,15 @@ class ImportSettingsDialog(QDialog):
         self.form.mediaDir.setStyleSheet("")
 
     def accept(self):
+        # Show a red warning box if the user tries to import without selecting
+        # a directory.
         if not self.mediaDir:
             self.form.mediaDir.setStyleSheet("border: 1px solid red")
             return
         QDialog.accept(self)
 
     def clearLayout(self, layout):
+        """Convenience method to remove child widgets from a layout."""
         while layout.count():
             child = layout.takeAt(0)
             if child.widget() is not None:
