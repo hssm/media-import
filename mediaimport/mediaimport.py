@@ -166,10 +166,11 @@ class ImportSettingsDialog(QDialog):
 
     def onBrowse(self):
         """Show the directory selection dialog."""
-        self.mediaDir = str(
+        path = str(
             QFileDialog.getExistingDirectory(mw, "Import Directory"))
-        if not self.mediaDir:
+        if not path:
             return
+        self.mediaDir = path
         self.form.mediaDir.setText(self.mediaDir)
         self.form.mediaDir.setStyleSheet("")
 
