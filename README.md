@@ -34,6 +34,6 @@ Here is a list of the content available to insert into fields. We will use an ex
 
 
 
-All new notes are added to a deck named `MediaImport`. This deck is created for you automatically if it doesn't exist.
+All new generated cards are added to a deck named `MediaImport`. This deck is created for you automatically if it doesn't exist.
 
 ![Complete](https://raw.githubusercontent.com/hssm/media-import/master/docs/complete.png)
