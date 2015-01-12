@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'config_dialog.ui'
+# Form implementation generated from reading ui file 'dialog.ui'
 #
-# Created: Sun Jan 11 23:34:12 2015
+# Created: Mon Jan 12 11:46:10 2015
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -68,7 +68,7 @@ class Ui_Form(object):
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
-        Form.setWindowTitle(_translate("Form", "Form", None))
+        Form.setWindowTitle(_translate("Form", "Media Import", None))
         self.label_3.setText(_translate("Form", "Media directory: ", None))
         self.browse.setText(_translate("Form", "Browse", None))
         self.label_2.setText(_translate("Form", "Map fields", None))
