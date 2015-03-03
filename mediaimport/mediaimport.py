@@ -61,7 +61,7 @@ def doMediaImport():
                 if ext in AUDIO:
                      note[field] = u'[sound:%s]' % fname
                 elif ext in IMAGE:
-                     note[field] =u'<img src="%s">' % fname
+                     note[field] = u'<img src="%s">' % fname
             elif action == "File Name":
                 note[field] = mediaName
             elif action == "File Name (full)":
@@ -166,7 +166,7 @@ class ImportSettingsDialog(QDialog):
 
     def onBrowse(self):
         """Show the directory selection dialog."""
-        path = str(
+        path = unicode(
             QFileDialog.getExistingDirectory(mw, "Import Directory"))
         if not path:
             return
