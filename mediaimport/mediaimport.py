@@ -94,11 +94,11 @@ class ImportSettingsDialog(QDialog):
         self.form.buttonBox.accepted.connect(self.accept)
         self.form.buttonBox.rejected.connect(self.reject)
         self.form.browse.clicked.connect(self.onBrowse)
-        self.populateModelList()
         # The path to the media directory chosen by user
         self.mediaDir = None
         # The number of fields in the note type we are using
         self.fieldCount = 0
+        self.populateModelList()
         self.exec_()
 
     def populateModelList(self):
