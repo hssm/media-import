@@ -15,7 +15,7 @@ from aqt.qt import *
 from aqt import editor
 from anki import notes
 
-import dialog
+from mediaimport import dialog
 
 # Support the same media types as the Editor
 AUDIO = editor.audio
@@ -35,9 +35,8 @@ def doMediaImport():
         return
     # Get the MediaImport deck id (auto-created if it doesn't exist)
     did = mw.col.decks.id('MediaImport')
-    # Passing in a unicode path to os.walk gives us unicode results.
     # We won't walk the path - we only want the top-level files.
-    (root, dirs, files) = os.walk(unicode(path)).next()
+    (root, dirs, files) = next(os.walk(path))
     mw.progress.start(max=len(files), parent=mw, immediate=True)
     newCount = 0
     failure = False
@@ -53,7 +52,7 @@ def doMediaImport():
         # Add the file to the media collection and get its name
         fname = mw.col.media.addFile(path)
         # Now we populate each field according to the mapping selected
-        for field, idx in fieldMap.iteritems():
+        for field, idx in fieldMap.items():
             action = ACTIONS[idx]
             if action == '':
                 continue
@@ -110,9 +109,7 @@ class ImportSettingsDialog(QDialog):
             item.model = m
             self.form.modelList.addItem(item)
         self.form.modelList.sortItems()
-        self.form.modelList.connect(self.form.modelList,
-                               SIGNAL("currentRowChanged(int)"),
-                               self.populateFieldGrid)
+        self.form.modelList.currentRowChanged.connect(self.populateFieldGrid)
         # Triggers a selection so the fields will be populated
         self.form.modelList.setCurrentRow(0)
 
@@ -166,8 +163,7 @@ class ImportSettingsDialog(QDialog):
 
     def onBrowse(self):
         """Show the directory selection dialog."""
-        path = unicode(
-            QFileDialog.getExistingDirectory(mw, "Import Directory"))
+        path = QFileDialog.getExistingDirectory(mw, "Import Directory")
         if not path:
             return
         self.mediaDir = path
@@ -215,6 +211,6 @@ note type you selected is able to generate cards by using a valid
 """)
 
 action = QAction("Media Import...", mw)
-mw.connect(action, SIGNAL("triggered()"), doMediaImport)
+action.triggered.connect(doMediaImport)
 mw.form.menuTools.addAction(action)
 
