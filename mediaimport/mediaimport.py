@@ -26,6 +26,7 @@ ACTIONS = ['',
            'File Name',
            'File Name (full)',
            'Extension',
+           'Extension-1',
            'Sequence']
 
 def doMediaImport():
@@ -67,6 +68,8 @@ def doMediaImport():
                 note[field] = fileName
             elif action == "Extension":
                 note[field] = ext
+            elif action == 'Extension-1':
+                note[field] = os.path.splitext(mediaName)[1][1:]
             elif action == "Sequence":
                 note[field] = str(i)
 
