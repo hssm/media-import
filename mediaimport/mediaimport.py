@@ -29,9 +29,13 @@ ACTIONS = ['',
            'Extension-1',
            'Sequence']
 
+# Note items that we can import into that are not note fields
+SPECIAL_FIELDS = ['Tags']
+
+
 def doMediaImport():
     # Raise the main dialog for the add-on and retrieve its result when closed.
-    (path, model, fieldMap, ok) = ImportSettingsDialog().getDialogResult()
+    (path, model, fieldList, ok) = ImportSettingsDialog().getDialogResult()
     if not ok:
         return
     # Get the MediaImport deck id (auto-created if it doesn't exist)
@@ -53,25 +57,31 @@ def doMediaImport():
         # Add the file to the media collection and get its name
         fname = mw.col.media.addFile(path)
         # Now we populate each field according to the mapping selected
-        for field, idx in fieldMap.items():
-            action = ACTIONS[idx]
+        for (field, actionIdx, special) in fieldList:
+            action = ACTIONS[actionIdx]
             if action == '':
                 continue
             elif action == "Media":
                 if ext in AUDIO:
-                     note[field] = u'[sound:%s]' % fname
+                     data = u'[sound:%s]' % fname
                 elif ext in IMAGE:
-                     note[field] = u'<img src="%s">' % fname
+                     data = u'<img src="%s">' % fname
             elif action == "File Name":
-                note[field] = mediaName
+                data = mediaName
             elif action == "File Name (full)":
-                note[field] = fileName
+                data = fileName
             elif action == "Extension":
-                note[field] = ext
+                data = ext
             elif action == 'Extension-1':
-                note[field] = os.path.splitext(mediaName)[1][1:]
+                data = os.path.splitext(mediaName)[1][1:]
             elif action == "Sequence":
-                note[field] = str(i)
+                data = str(i)
+
+            print("Special:", special, "Field:", field)
+            if special and field == "Tags":
+                note.tags.append(data)
+            else:
+                note[field] = data
 
         if not mw.col.addNote(note):
             # No cards were generated - probably bad template. No point
@@ -126,18 +136,29 @@ class ImportSettingsDialog(QDialog):
         special cases for rows 0 and 1. The final row is a spacer."""
 
         self.clearLayout(self.form.fieldMapGrid)
-        for row, field in enumerate(self.form.modelList.currentItem().model['flds']):
-            cmb = QComboBox()
-            cmb.addItems(ACTIONS)
-            self.form.fieldMapGrid.addWidget(QLabel(field['name']), row, 0)
-            self.form.fieldMapGrid.addWidget(cmb, row, 1)
-            if row == 0: cmb.setCurrentIndex(1) # TODO: don't hard-code index?
-            if row == 1: cmb.setCurrentIndex(2)
-        row += 1
+        # Add note fields to grid
+        row = 0
+        for field in self.form.modelList.currentItem().model['flds']:
+            self.createRow(field['name'], row)
+            row += 1
+        # Add special fields to grid
+        for name in SPECIAL_FIELDS:
+            self.createRow(name, row, special=True)
+            row += 1
         self.fieldCount = row
         self.form.fieldMapGrid.addItem(
-            QSpacerItem(0, 0, QSizePolicy.Minimum, QSizePolicy.Expanding),
-            row, 0)
+            QSpacerItem(0, 0, QSizePolicy.Minimum, QSizePolicy.Expanding), row, 0)
+
+    def createRow(self, name, idx, special=False):
+        lbl = QLabel(name)
+        cmb = QComboBox()
+        cmb.addItems(ACTIONS)
+        # piggy-back the special flag on QLabel
+        lbl.special = special
+        self.form.fieldMapGrid.addWidget(lbl, idx, 0)
+        self.form.fieldMapGrid.addWidget(cmb, idx, 1)
+        if idx == 0: cmb.setCurrentIndex(1)
+        if idx == 1: cmb.setCurrentIndex(2)
 
     def getDialogResult(self):
         """Return a tuple containing the user-defined settings to follow
@@ -149,20 +170,21 @@ class ImportSettingsDialog(QDialog):
          - True/False indicating whether the user clicked OK/Cancel"""
 
         if self.result() == QDialog.Rejected:
-            return (None, None, None, False)
+            return None, None, None, False
 
         model = self.form.modelList.currentItem().model
         # Iterate the grid rows to populate the field map
-        fieldMap = {}
+        fieldList = []
         grid = self.form.fieldMapGrid
         for row in range(self.fieldCount):
             # QLabel with field name
             field = grid.itemAtPosition(row, 0).widget().text()
+            # Piggy-backed special flag
+            special = grid.itemAtPosition(row, 0).widget().special
             # QComboBox with index from the action list
-            action = grid.itemAtPosition(row, 1).widget().currentIndex()
-            fieldMap[field] = action
-
-        return (self.mediaDir, model, fieldMap, True)
+            actionIdx = grid.itemAtPosition(row, 1).widget().currentIndex()
+            fieldList.append((field, actionIdx, special))
+        return self.mediaDir, model, fieldList, True
 
     def onBrowse(self):
         """Show the directory selection dialog."""
