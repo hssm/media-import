@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Version: 2.4
+# Version: 2.5
 #
 # This is an Anki add-on for creating notes by importing media files from a
 # user-selected directory. The user is able to map properties of the imported
@@ -77,7 +77,6 @@ def doMediaImport():
             elif action == "Sequence":
                 data = str(i)
 
-            print("Special:", special, "Field:", field)
             if special and field == "Tags":
                 note.tags.append(data)
             else:
