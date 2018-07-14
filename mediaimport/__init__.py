@@ -35,13 +35,16 @@ SPECIAL_FIELDS = ['Tags']
 
 def doMediaImport():
     # Raise the main dialog for the add-on and retrieve its result when closed.
-    (path, model, fieldList, ok) = ImportSettingsDialog().getDialogResult()
+    (media_path, model, fieldList, ok) = ImportSettingsDialog().getDialogResult()
     if not ok:
         return
     # Get the MediaImport deck id (auto-created if it doesn't exist)
     did = mw.col.decks.id('MediaImport')
-    # We won't walk the path - we only want the top-level files.
-    (root, dirs, files) = next(os.walk(path))
+    if not isinstance(media_path[0], list): # a folder, not file(s), has been chosen
+        # We won't walk the path - we only want the top-level files.
+        (root, dirs, files) = next(os.walk(media_path))
+    else: # file(s), not folder, has been chosen
+        files = media_path[0]
     mw.progress.start(max=len(files), parent=mw, immediate=True)
     newCount = 0
     failure = False
@@ -50,7 +53,10 @@ def doMediaImport():
         note.model()['did'] = did
         mediaName, ext = os.path.splitext(fileName)
         ext = ext[1:].lower()
-        path = os.path.join(root, fileName)
+        if not isinstance(media_path[0], list): # a folder, not file(s), has been chosen
+            path = os.path.join(root, fileName)
+        else: # file(s), not folder, has been chosen
+            path = fileName
         if ext is None or ext not in AUDIO+IMAGE:
             # Skip files with no extension and non-media files
             continue
@@ -105,6 +111,7 @@ class ImportSettingsDialog(QDialog):
         self.form.buttonBox.accepted.connect(self.accept)
         self.form.buttonBox.rejected.connect(self.reject)
         self.form.browse.clicked.connect(self.onBrowse)
+        self.form.browsefile.clicked.connect(self.onBrowsefile)
         # The path to the media directory chosen by user
         self.mediaDir = None
         # The number of fields in the note type we are using
@@ -183,22 +190,36 @@ class ImportSettingsDialog(QDialog):
             # QComboBox with index from the action list
             actionIdx = grid.itemAtPosition(row, 1).widget().currentIndex()
             fieldList.append((field, actionIdx, special))
-        return self.mediaDir, model, fieldList, True
+        if self.mediaDir:
+            return self.mediaDir, model, fieldList, True
+        else:
+            return self.mediaFile, model, fieldList, True
 
     def onBrowse(self):
         """Show the directory selection dialog."""
-        path = QFileDialog.getExistingDirectory(mw, "Import Directory")
+        path = QFileDialog.getExistingDirectory(mw, "Choose Folder to import")
         if not path:
             return
         self.mediaDir = path
         self.form.mediaDir.setText(self.mediaDir)
         self.form.mediaDir.setStyleSheet("")
 
+    def onBrowsefile(self):
+        """Show the file(s) selection dialog."""
+        path = QFileDialog.getOpenFileNames(mw, "Choose File(s) to import")
+        if not path:
+            return
+        self.mediaFile = path
+        for item in self.mediaFile[0]:
+            self.form.mediaFile.addItem(item)
+        self.form.mediaFile.setStyleSheet("")
+
     def accept(self):
         # Show a red warning box if the user tries to import without selecting
-        # a directory.
-        if not self.mediaDir:
+        # a directory or a file.
+        if not hasattr(self, 'mediaDir') and not hasattr(self, 'mediaFile'):
             self.form.mediaDir.setStyleSheet("border: 1px solid red")
+            self.form.mediaFile.setStyleSheet("border: 1px solid red")
             return
         QDialog.accept(self)
 
@@ -237,4 +258,5 @@ note type you selected is able to generate cards by using a valid
 action = QAction("Media Import...", mw)
 action.triggered.connect(doMediaImport)
 mw.form.menuTools.addAction(action)
+
 

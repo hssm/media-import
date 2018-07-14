@@ -19,7 +19,7 @@
      <item>
       <widget class="QLabel" name="label_3">
        <property name="text">
-        <string>Media directory: </string>
+        <string>Folder path: </string>
        </property>
       </widget>
      </item>
@@ -40,20 +40,25 @@
     </layout>
    </item>
    <item>
-    <spacer name="verticalSpacer">
-     <property name="orientation">
-      <enum>Qt::Vertical</enum>
-     </property>
-     <property name="sizeType">
-      <enum>QSizePolicy::Fixed</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>0</width>
-       <height>10</height>
-      </size>
-     </property>
-    </spacer>
+    <layout class="QHBoxLayout" name="horizontalLayout_3">
+     <item alignment="Qt::AlignTop">
+      <widget class="QLabel" name="label_4">
+       <property name="text">
+        <string>File(s) path</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QListWidget" name="mediaFile"/>
+     </item>
+     <item alignment="Qt::AlignTop">
+      <widget class="QPushButton" name="browsefile">
+       <property name="text">
+        <string>Browse</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
    <item>
     <layout class="QGridLayout" name="gridLayout">
@@ -91,3 +96,4 @@
  <resources/>
  <connections/>
 </ui>
+

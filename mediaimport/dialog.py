@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'dialog.ui'
 #
-# Created by: PyQt5 UI code generator 5.6
+# Created by: PyQt5 UI code generator 5.10.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -27,8 +27,18 @@ class Ui_Form(object):
         self.browse.setObjectName("browse")
         self.horizontalLayout_2.addWidget(self.browse)
         self.verticalLayout.addLayout(self.horizontalLayout_2)
-        spacerItem = QtWidgets.QSpacerItem(0, 10, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
-        self.verticalLayout.addItem(spacerItem)
+        self.horizontalLayout_3 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_3.setObjectName("horizontalLayout_3")
+        self.label_4 = QtWidgets.QLabel(Form)
+        self.label_4.setObjectName("label_4")
+        self.horizontalLayout_3.addWidget(self.label_4, 0, QtCore.Qt.AlignTop)
+        self.mediaFile = QtWidgets.QListWidget(Form)
+        self.mediaFile.setObjectName("mediaFile")
+        self.horizontalLayout_3.addWidget(self.mediaFile)
+        self.browsefile = QtWidgets.QPushButton(Form)
+        self.browsefile.setObjectName("browsefile")
+        self.horizontalLayout_3.addWidget(self.browsefile, 0, QtCore.Qt.AlignTop)
+        self.verticalLayout.addLayout(self.horizontalLayout_3)
         self.gridLayout = QtWidgets.QGridLayout()
         self.gridLayout.setObjectName("gridLayout")
         self.modelList = QtWidgets.QListWidget(Form)
@@ -55,8 +65,11 @@ class Ui_Form(object):
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
         Form.setWindowTitle(_translate("Form", "Media Import"))
-        self.label_3.setText(_translate("Form", "Media directory: "))
+        self.label_3.setText(_translate("Form", "Folder path: "))
         self.browse.setText(_translate("Form", "Browse"))
+        self.label_4.setText(_translate("Form", "File(s) path"))
+        self.browsefile.setText(_translate("Form", "Browse"))
         self.label_2.setText(_translate("Form", "Map fields"))
         self.label.setText(_translate("Form", "Select note type"))
+
 
