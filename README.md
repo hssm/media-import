@@ -30,7 +30,8 @@ Here is a list of the content available to insert into fields. We will use an ex
  - File Name (full) - The name of the file including the extention (*apple.jpg*)
  - Extension - Only the extension of the file (*jpg*)
  - Sequence - A number indicating the order in which the file was imported. If 15 files were imported, each file will contain a value starting from 0 to 14.
-
+ - Alternating Question - Every second Media as Question
+ - Alternating Answer - Every other second Media as Answer
 
 
 

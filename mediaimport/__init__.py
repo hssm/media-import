@@ -27,7 +27,8 @@ ACTIONS = ['',
            'File Name (full)',
            'Extension',
            'Extension-1',
-           'Sequence']
+           'Sequence',
+           'Alternating']
 
 # Note items that we can import into that are not note fields
 SPECIAL_FIELDS = ['Tags']
@@ -42,9 +43,9 @@ def doMediaImport():
     did = mw.col.decks.id('MediaImport')
     # We won't walk the path - we only want the top-level files.
     (root, dirs, files) = next(os.walk(path))
-    mw.progress.start(max=len(files), parent=mw, immediate=True)
     newCount = 0
     failure = False
+    mw.progress.start(max=len(files), parent=mw, immediate=True)
     for i, fileName in enumerate(files):
         note = notes.Note(mw.col, model)
         note.model()['did'] = did
@@ -57,11 +58,18 @@ def doMediaImport():
         # Add the file to the media collection and get its name
         fname = mw.col.media.addFile(path)
         # Now we populate each field according to the mapping selected
-        for (field, actionIdx, special) in fieldList:
+        for j, (field, actionIdx, special) in enumerate(fieldList):
             action = ACTIONS[actionIdx]
             if action == '':
                 continue
-            elif action == "Media":
+            if i % 2 == 1 and action == "Alternating":
+                note = ""
+                continue
+            elif action == "Media" or action == "Alternating":    
+                #For alternating, the files get devided in two parts, the question and the answer
+                if action == "Alternating":
+                    path = os.path.join(root, files[i+j])
+                    fname = mw.col.media.addFile(path)
                 if ext in AUDIO:
                      data = u'[sound:%s]' % fname
                 elif ext in IMAGE:
@@ -76,12 +84,12 @@ def doMediaImport():
                 data = os.path.splitext(mediaName)[1][1:]
             elif action == "Sequence":
                 data = str(i)
-
             if special and field == "Tags":
                 note.tags.append(data)
             else:
                 note[field] = data
-
+        if note == "":
+            continue
         if not mw.col.addNote(note):
             # No cards were generated - probably bad template. No point
             # trying to import anymore.
