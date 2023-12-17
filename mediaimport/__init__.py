@@ -110,7 +110,10 @@ class ImportSettingsDialog(QDialog):
         # The number of fields in the note type we are using
         self.fieldCount = 0
         self.populateModelList()
-        self.exec_()
+        try:
+            self.exec_()
+        except AttributeError:
+            self.exec()
 
     def populateModelList(self):
         """Fill in the list of available note types to select from."""
@@ -145,8 +148,12 @@ class ImportSettingsDialog(QDialog):
             self.createRow(name, row, special=True)
             row += 1
         self.fieldCount = row
-        self.form.fieldMapGrid.addItem(
-            QSpacerItem(0, 0, QSizePolicy.Minimum, QSizePolicy.Expanding), row, 0)
+        try:
+            self.form.fieldMapGrid.addItem(
+                QSpacerItem(0, 0, QSizePolicy.Minimum, QSizePolicy.Expanding), row, 0)
+        except AttributeError:
+            self.form.fieldMapGrid.addItem(
+                QSpacerItem(0, 0, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding), row, 0)
 
     def createRow(self, name, idx, special=False):
         lbl = QLabel(name)
@@ -168,8 +175,12 @@ class ImportSettingsDialog(QDialog):
            integer index from the ACTIONS list
          - True/False indicating whether the user clicked OK/Cancel"""
 
-        if self.result() == QDialog.Rejected:
-            return None, None, None, False
+        try:
+            if self.result() == QDialog.Rejected:
+                return None, None, None, False
+        except AttributeError:
+            if self.result() == QDialog.DialogCode.Rejected:
+                return None, None, None, False
 
         model = self.form.modelList.currentItem().model
         # Iterate the grid rows to populate the field map
