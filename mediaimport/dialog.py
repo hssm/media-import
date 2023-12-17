@@ -6,7 +6,11 @@
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+try:
+    from PyQt5 import QtCore, QtGui, QtWidgets
+except ModuleNotFoundError:
+    from PyQt6 import QtCore, QtGui, QtWidgets
+
 
 class Ui_Form(object):
     def setupUi(self, Form):
@@ -27,7 +31,12 @@ class Ui_Form(object):
         self.browse.setObjectName("browse")
         self.horizontalLayout_2.addWidget(self.browse)
         self.verticalLayout.addLayout(self.horizontalLayout_2)
-        spacerItem = QtWidgets.QSpacerItem(0, 10, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
+
+        try:
+            spacerItem = QtWidgets.QSpacerItem(0, 10, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
+        except AttributeError:
+            spacerItem = QtWidgets.QSpacerItem(0, 10, QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Fixed)
+
         self.verticalLayout.addItem(spacerItem)
         self.gridLayout = QtWidgets.QGridLayout()
         self.gridLayout.setObjectName("gridLayout")
@@ -38,7 +47,12 @@ class Ui_Form(object):
         self.label_2.setObjectName("label_2")
         self.gridLayout.addWidget(self.label_2, 0, 3, 1, 1)
         self.buttonBox = QtWidgets.QDialogButtonBox(Form)
-        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
+
+        try:
+            self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
+        except AttributeError:
+            self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.StandardButton.Cancel|QtWidgets.QDialogButtonBox.StandardButton.Ok)
+
         self.buttonBox.setObjectName("buttonBox")
         self.gridLayout.addWidget(self.buttonBox, 5, 3, 1, 1)
         self.fieldMapGrid = QtWidgets.QGridLayout()
